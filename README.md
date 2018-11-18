@@ -23,7 +23,7 @@ pip install virtualenv
 
 
 ### 2. Virtualenv anlegen (optional, aber empfohlen)
-Bei größeren Projekten kann es sinnvoll sein eine virtuelle Python Umgebung (*virtualenv*)zu benutzen.
+Bei größeren Projekten kann es sinnvoll sein eine virtuelle Python Umgebung (*virtualenv*) zu benutzen.
 Der Vorteil solcher Umgebungen ist die Isolation des aktuellen Projekts von anderen
 Python Projekten und von der globalen Python-Installation. Z.B. werden die in einer
 virtualenv installierten Module ausschließlich in das lokale Projektverzeichnis geladen
@@ -35,8 +35,9 @@ Projektverzeichnisses ausgeführt werden:
 virtualenv ./
 ```
 
-Anschließend muss die virtuelle Umgebung aktiviert werden..
-Unter Linux: (immer noch im Projektverzeichnis-Root)
+Anschließend (und jedesmal wenn man mit einem neuen Terminal auf die virtuelle Umgebung zugreifen möchte) muss die virtuelle Umgebung aktiviert werden..
+
+Unter Linux:
 ```
 source bin/activate
 ```
@@ -44,4 +45,39 @@ source bin/activate
 Unter Windows:
 ```
 call Scripts/activate
+```
+
+
+### 3. Data-Backend installieren
+Das Data-Backend kann nun über folgenden Befehl installiert werden:
+```
+pip install git+https://dl0ht.fk4.hs-bremen.de/git/jherkenhoff/Data-Backend.git
+```
+Es wird nach dem Benutzernamen und dem Passwort für das HS-Git gefragt. Anschließend wird das Data-Backend heruntergeladen und (entweder global oder in der virtualenv) installiert.
+
+### 4. Importieren des Data-Backends
+Nach der Installation kann das Data-Backend in eigenen Python-Skripten wie gewohnt importiert werden.
+Das Data-Backend Modul besitzt mehrere Klassen, wobei jedoch ausschließlich die `Dataset` Klasse für das abspeichern von Daten benötigt wird:
+```
+from data_backend import Dataset
+```
+
+### 5. Benutzen der Dataset Klasse
+
+Im Folgenden Beispiel wird die Benutzung der Dataset Klasse verdeutlicht:
+
+```
+from data_backend import Dataset
+import numpy as np
+
+# Erstellen eines leeren Datasets:
+dataset = Dataset("/home/PJET2018/datasets/", "neustadt", gps=True)
+
+# Schreiben der Device-Metadaten (geht nur einmalig nach Erstellen eines neuen Datasets)
+dataset.device.name = "Raspberry Pi"
+dataset.device.version = "1.8"
+dataset.device.method = "FFT"
+
+sample = Sample(time=np.datetime64('now'), gps=, spectrum=)
+dataset.samples.append(sample)
 ```
