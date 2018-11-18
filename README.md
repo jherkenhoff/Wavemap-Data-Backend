@@ -73,7 +73,7 @@ import numpy as np
 # Erstellen eines leeren Datasets:
 dataset = Dataset("/home/PJET2018/datasets/", "neustadt", gps=True)
 
-# Schreiben der Device-Metadaten (geht nur einmalig nach Erstellen eines neuen Datasets)
+# Schreiben der Device-Metadaten (geht nur solange noch keine Samples ins dataset geschrieben wurden)
 dataset.device.name = "Raspberry Pi"
 dataset.device.version = "1.8"
 dataset.device.method = "FFT"
