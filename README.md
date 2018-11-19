@@ -3,6 +3,7 @@
 Das *Data-Backend* Modul bietet eine Schnittstelle zum Speichern der gesammelten Daten
 aus dem PJET2018 Projekt im Dateisystem.
 
+![UML](doc/uml.png)
 
 ## Getting started
 Im Folgenden wird die Einbindung und Verwendung des Data-Backends erläutert.
@@ -57,27 +58,38 @@ Es wird nach dem Benutzernamen und dem Passwort für das HS-Git gefragt. Anschli
 
 ### 4. Importieren des Data-Backends
 Nach der Installation kann das Data-Backend in eigenen Python-Skripten wie gewohnt importiert werden.
-Das Data-Backend Modul besitzt mehrere Klassen, wobei jedoch ausschließlich die `Dataset` Klasse für das abspeichern von Daten benötigt wird:
+Es besteht aus mehreren Klassen, die importiert werden müssen:
 ```
-from data_backend import Dataset
+from data_backend import Dataset, Sample, GPS, Spectrum
 ```
 
 ### 5. Benutzen der Dataset Klasse
 
-Im Folgenden Beispiel wird die Benutzung der Dataset Klasse verdeutlicht:
+Im Folgenden Beispiel wird ein Sample in das dataset geschrieben:
 
 ```
-from data_backend import Dataset
+# Importieren
+from data_backend import Dataset, Sample, GPS, Spectrum
 import numpy as np
 
-# Erstellen eines leeren Datasets:
-dataset = Dataset("/home/PJET2018/datasets/", "neustadt", gps=True)
+# Erstellen eines neuen Datasets:
+dataset = Dataset("/home/PJET2018/datasets/", "neustadt")
 
-# Schreiben der Device-Metadaten (geht nur solange noch keine Samples ins dataset geschrieben wurden)
+# Schreiben der Device-Metadaten
 dataset.device.name = "Raspberry Pi"
 dataset.device.version = "1.8"
-dataset.device.method = "FFT"
 
-sample = Sample(time=np.datetime64('now'), gps=, spectrum=)
-dataset.samples.append(sample)
+# Ein erstes Sample in das dataset schreiben:
+sample1 = Sample(
+    time     = np.datetime64( "now" ), 
+    spectrum = Spectrum( freq=[1e6, 2e6, 3e6], mag=[-87.9, -82.6, -93.4] ),
+    gps      = GPS( lat = 8.8016937, lat = 53.0792962 )
+)
+
+# Und schließlich das Sample in das Dataset schreiben:
+dataset.samples.append(sample1)
+
+# Zum Schluss (z.B. wenn die Messfahrt durch Bremen beendet wurde)
+# sollte das Dataset wieder geschlossen werden:
+dataset.close()
 ```
