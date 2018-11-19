@@ -7,6 +7,8 @@ In der folgenden Abbildung ist die Klassenhierarchie des Data-Backends dargestel
 
 ![UML](doc/uml.png)
 
+(Die tatsächliche Implementierung des Data-backends weicht leicht von der Abbildung ab)
+
 ## Getting started
 Im Folgenden wird die Einbindung und Verwendung des Data-Backends erläutert.
 
@@ -95,6 +97,30 @@ dataset.samples.append(sample1)
 dataset.close()
 ```
 
+#### Weitere Samples schreiben
+Das folgende Beispiel zeigt, wie weitere Samples in das Dataset geschrieben werden können.
+Wie im vorherigem Beispiel können diese einfach mit der `append()` Funktion an ein Dataset angehängt werden: 
+
+```
+sample1 = Sample(
+    time     = np.datetime64( "now" ), 
+    spectrum = Spectrum( freq=[1e6, 2e6, 3e6], mag=[-87.9, -82.6, -93.4] ),
+    gps      = GPS( lat = 8.8016937, lat = 53.0792962 )
+)
+dataset.samples.append(sample1)
+
+sample2 = Sample(
+    time     = np.datetime64( "now" ), 
+    spectrum = Spectrum( freq=[1e6, 2e6, 3e6], mag=[-90.3, -85.6, -82.3] ),
+    gps      = GPS( lat = 8.8016923, lat = 53.0792362 )
+)
+dataset.samples.append(sample2)
+```
+
+**ACHTUNG:** Alle Samples die in einem Dataset gespeichert werden, müssen die selbe Form (z.B: Anzahl Frequenz-Stützstellen) haben.
+Das erste Sample, welches einem Dataset mittels `append()` hinzugefügt wurde dient als "Muster" für alle darauffolgenden Samples.
+Wurde in einem Dataset z.B. bereits ein Sample mit 2048 Frequenzstützstellen gespeichert, so kann dort kein Sample mehr mit 512 Stützstellen gespeichert werden. In diesem Fall würde Python einen Fehler generieren.
+
 #### Öffnen und auslesen
 Im Folgenden Beispiel wird verdeutlicht, wie ein bestehendes Dataset geöffnet wird und daraus gelesen werden kann:
 
@@ -120,4 +146,19 @@ print(sample.spectrum.freq)
 
 # Auch hier gehört es wieder zum "guten Ton" das Dataset wieder zu schließen
 dataset.close()
+```
+
+
+#### Ein Sample ohne GPS-Informationen speichern
+Sollen Samples ohne GPS-Informationen gespeichert werden (z.B. für Messungen im E-Gebäude), kann das `gps` Argument beim Erstellen eines Samples einfach weggelassen werden:
+
+```
+# Erstellen eines Samples ohne GPS:
+sample1 = Sample(
+    time     = np.datetime64( "now" ), 
+    spectrum = Spectrum( freq=[1e6, 2e6, 3e6], mag=[-87.9, -82.6, -93.4] )
+)
+
+# Schreiben ins Dataset:
+dataset.samples.append(sample1)
 ```
