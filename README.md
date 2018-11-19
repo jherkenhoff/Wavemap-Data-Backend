@@ -1,7 +1,9 @@
 # Data-Backend
 
 Das *Data-Backend* Modul bietet eine Schnittstelle zum Speichern der gesammelten Daten
-aus dem PJET2018 Projekt im Dateisystem.
+aus dem PJET2018 Projekt im Dateisystem. Dabei wird die eigentliche Datenspeicherung (das schreiben in eine Datenbank oder in eine Datei -> hier HDF5) abstrahiert.
+
+In der folgenden Abbildung ist die Klassenhierarchie des Data-Backends dargestellt:
 
 ![UML](doc/uml.png)
 
@@ -13,14 +15,11 @@ Das Dataset-Backend ist auf Python 3 ausgelegt. Es wird davon ausgegangen, dass 
 dem Zielsystem installiert und lauffähig ist.
 Außerdem muss `pip` (Der standard Paketmanager von Python) installiert sein.
 
-
-
 Des Weiteren muss das Python-Modul `virtuelenv` installiert werden:
 ```
 pip install virtualenv
 ```
 (evtl. werden Superuser-Rechte benötigt)
-
 
 
 ### 2. Virtualenv anlegen (optional, aber empfohlen)
@@ -58,14 +57,16 @@ Es wird nach dem Benutzernamen und dem Passwort für das HS-Git gefragt. Anschli
 
 ### 4. Importieren des Data-Backends
 Nach der Installation kann das Data-Backend in eigenen Python-Skripten wie gewohnt importiert werden.
-Es besteht aus mehreren Klassen, die importiert werden müssen:
+Es besteht aus mehreren Klassen, die zunächst alle importiert werden müssen:
 ```
 from data_backend import Dataset, Sample, GPS, Spectrum
 ```
 
 ### 5. Benutzen der Dataset Klasse
 
-Im Folgenden Beispiel wird ein Sample in das dataset geschrieben:
+
+#### Anlegen und speichern
+Im Folgenden Beispiel wird verdeutlicht, wie ein Dataset angelegt wird und ein Sample darin gespeichert wird:
 
 ```
 # Importieren
@@ -91,5 +92,32 @@ dataset.samples.append(sample1)
 
 # Zum Schluss (z.B. wenn die Messfahrt durch Bremen beendet wurde)
 # sollte das Dataset wieder geschlossen werden:
+dataset.close()
+```
+
+#### Öffnen und auslesen
+Im Folgenden Beispiel wird verdeutlicht, wie ein bestehendes Dataset geöffnet wird und daraus gelesen werden kann:
+
+```
+# Importieren
+from data_backend import Dataset, Sample, GPS, Spectrum
+import numpy as np
+
+# Öffnen eines bestehenden Datasets: (Wurde in vorherigem Beispiel angelegt)
+# Der Funktionsaufruf unterscheidet nicht zwischen neuem und bestehendem Dataset
+dataset = Dataset("/home/PJET2018/datasets/", "neustadt")
+
+# Auslesen des Device Namens
+print(dataset.device.name)
+
+# Einen Sample aus dem Dataset lesen:
+sample1 = dataset.samples[0]
+
+# Ein paar Beispiele, wie die Daten aus dem Sample ausgelesen werden können:
+print(sample1.time)
+print(sample.gps.lat)
+print(sample.spectrum.freq)
+
+# Auch hier gehört es wieder zum "guten Ton" das Dataset wieder zu schließen
 dataset.close()
 ```
