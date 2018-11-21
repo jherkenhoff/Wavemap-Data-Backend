@@ -17,12 +17,6 @@ Das Dataset-Backend ist auf Python 3 ausgelegt. Es wird davon ausgegangen, dass 
 dem Zielsystem installiert und lauffähig ist.
 Außerdem muss `pip` (Der standard Paketmanager von Python) installiert sein.
 
-Des Weiteren muss das Python-Modul `virtuelenv` installiert werden:
-```
-pip install virtualenv
-```
-(evtl. werden Superuser-Rechte benötigt)
-
 
 ### 2. Virtualenv anlegen (optional, aber empfohlen)
 Bei größeren Projekten kann es sinnvoll sein eine virtuelle Python Umgebung (*virtualenv*) zu benutzen.
@@ -31,7 +25,13 @@ Python Projekten und von der globalen Python-Installation. Z.B. werden die in ei
 virtualenv installierten Module ausschließlich in das lokale Projektverzeichnis geladen
 und "müllen" so nicht die globale Python installation zu.
 
-Zum Anlegen der virtuellen Umgebung muss der folgende Befehl im Stammverzeichnis des
+Zum installieren des Moduls `virtuelenv` muss folgender Befehl ausgeführt werden:
+```
+pip install virtualenv
+```
+(evtl. werden Superuser-Rechte benötigt)
+
+Zum Anlegen der virtuellen Umgebung muss der folgende Befehl im Root des
 Projektverzeichnisses ausgeführt werden:
 ```
 virtualenv ./
@@ -59,9 +59,9 @@ Es wird nach dem Benutzernamen und dem Passwort für das HS-Git gefragt. Anschli
 
 ### 4. Importieren des Data-Backends
 Nach der Installation kann das Data-Backend in eigenen Python-Skripten wie gewohnt importiert werden.
-Es besteht aus mehreren Klassen, die zunächst alle importiert werden müssen:
+Es wird ausschließlich die Dataset Klasse benötigt:
 ```
-from data_backend import Dataset, Sample, GPS, Spectrum
+from data_backend import Dataset
 ```
 
 ### 5. Benutzen der Dataset Klasse
@@ -72,93 +72,119 @@ Im Folgenden Beispiel wird verdeutlicht, wie ein Dataset angelegt wird und ein S
 
 ```
 # Importieren
-from data_backend import Dataset, Sample, GPS, Spectrum
+from data_backend import Dataset
 import numpy as np
 
 # Erstellen eines neuen Datasets:
-dataset = Dataset("/home/PJET2018/datasets/", "neustadt")
+# Das erste Argument (hier "./") gibt den Pfad an, wo das Dataset gespeichert werden soll.
+# Das zweite argument (hier "neustadt") gibt den Namen des Datasets an.
+dataset = Dataset("./", "neustadt")
 
-# Schreiben der Device-Metadaten
+# Für die spätere Zuordnung des Datasets sollten die Device Metadaten geschrieben werden:
 dataset.device.name = "Raspberry Pi"
 dataset.device.version = "1.8"
 
-# Ein erstes Sample in das dataset schreiben:
-sample1 = Sample(
-    time     = np.datetime64( "now" ), 
-    spectrum = Spectrum( freq=[1e6, 2e6, 3e6], mag=[-87.9, -82.6, -93.4] ),
-    gps      = GPS( lat = 8.8016937, lat = 53.0792962 )
-)
+# Ein Dataset kann mehrere Subsets beinhalten. Das ist zum Beispiel dass sinnvoll, wenn die selbe Messung
+# Daten in mehreren Varianten abspeichern möchte (z.B. jeweils einmal mit "minhold", "maxhold" und "quasipeak").
+# Das erste Argument (hier "maxhold") gibt den Namen des Subsets an. Er kann frei gewählt werden.
+# Das zweite Argument (`freq_bins`) gibt die Frequenzen an, bei denen Spektraldaten gemessen werden. (Hier z.B. bei 1kHz, 10kHz und 100kHz)
+# Das dritte Argument (gps_support) gibt an, ob in dem Subset GPS Daten gespeichert werden sollen.
+dataset.create_subset("maxhold", freq_bins=[1e3, 1e4, 1e5], gps_support=True)
 
-# Und schließlich das Sample in das Dataset schreiben:
-dataset.samples.append(sample1)
+# Mit dem folgenden Befehl können Daten in das Subset geschrieben werden:
+# Über den Index ["maxhold"] wird das Subset ausgewählt, in dem gespeichert werden soll.
+dataset["maxhold"].append_sample(
+        time     = np.datetime64( "now" ),
+        spectrum = [-87.3, -91.3, -89.2],
+        lat      = 53.073635,
+        lon      = 8.806422,
+        alt      = 12,
+        speed    = 4,
+        sats     = 8,
+        accuracy = 6
+    )
 
 # Zum Schluss (z.B. wenn die Messfahrt durch Bremen beendet wurde)
 # sollte das Dataset wieder geschlossen werden:
 dataset.close()
 ```
 
-#### Weitere Samples schreiben
-Das folgende Beispiel zeigt, wie weitere Samples in das Dataset geschrieben werden können.
-Wie im vorherigem Beispiel können diese einfach mit der `append()` Funktion an ein Dataset angehängt werden: 
-
-```
-sample1 = Sample(
-    time     = np.datetime64( "now" ), 
-    spectrum = Spectrum( freq=[1e6, 2e6, 3e6], mag=[-87.9, -82.6, -93.4] ),
-    gps      = GPS( lat = 8.8016937, lat = 53.0792962 )
-)
-dataset.samples.append(sample1)
-
-sample2 = Sample(
-    time     = np.datetime64( "now" ), 
-    spectrum = Spectrum( freq=[1e6, 2e6, 3e6], mag=[-90.3, -85.6, -82.3] ),
-    gps      = GPS( lat = 8.8016923, lat = 53.0792362 )
-)
-dataset.samples.append(sample2)
-```
-
-**ACHTUNG:** Alle Samples die in einem Dataset gespeichert werden, müssen die selbe Form (z.B: Anzahl Frequenz-Stützstellen) haben.
-Das erste Sample, welches einem Dataset mittels `append()` hinzugefügt wurde dient als "Muster" für alle darauffolgenden Samples.
-Wurde in einem Dataset z.B. bereits ein Sample mit 2048 Frequenzstützstellen gespeichert, so kann dort kein Sample mehr mit 512 Stützstellen gespeichert werden. In diesem Fall würde Python einen Fehler generieren.
+**ACHTUNG:** Alle Samples die in einem Dataset gespeichert werden, müssen genau die Anzahl an Frequenzstützstellen aufweisen, wie beim erstellen des Subsets ( mit dataset.create_subset ) angegeben wurden.
 
 #### Öffnen und auslesen
 Im Folgenden Beispiel wird verdeutlicht, wie ein bestehendes Dataset geöffnet wird und daraus gelesen werden kann:
 
-```
+```python
 # Importieren
-from data_backend import Dataset, Sample, GPS, Spectrum
+from data_backend import Dataset
 import numpy as np
 
 # Öffnen eines bestehenden Datasets: (Wurde in vorherigem Beispiel angelegt)
 # Der Funktionsaufruf unterscheidet nicht zwischen neuem und bestehendem Dataset
-dataset = Dataset("/home/PJET2018/datasets/", "neustadt")
+dataset = Dataset("./", "neustadt")
 
 # Auslesen des Device Namens
 print(dataset.device.name)
 
-# Einen Sample aus dem Dataset lesen:
-sample1 = dataset.samples[0]
+# Das erste Sample aus dem "maxhold" Subset lesen:
+sample = dataset["maxhold"][0]
 
-# Ein paar Beispiele, wie die Daten aus dem Sample ausgelesen werden können:
-print(sample1.time)
-print(sample.gps.lat)
-print(sample.spectrum.freq)
+# Die Dataset Klasse unterstützt die standard Python slicing Operatoren:
+sample = dataset["maxhold"][:]   # Alle Samples
+sample = dataset["maxhold"][:5]  # Die ersten 5 Samples
+sample = dataset["maxhold"][-5:] # Die letzen 5 Samples
 
-# Auch hier gehört es wieder zum "guten Ton" das Dataset wieder zu schließen
+# Um auf einzelne Elemente innerhalb der Samples zuzugreifen wird der Indexing Operator benutzt:
+sample = dataset["maxhold"][0]["time"]          # Zeit des ersten Samples
+sample = dataset["maxhold"][:][["lat", "lon"]]  # Latitude und longitude Elemente aller Samples 
+
+# Auf diese Weise können bereits einfache Verarbeitungsroutinen generiert werden:
+spectrum_mean = dataset["maxhold"][0:2]["spectrum"].mean(1)
+
+# Und wieder das Dataset schließen:
 dataset.close()
 ```
 
 
 #### Ein Sample ohne GPS-Informationen speichern
-Sollen Samples ohne GPS-Informationen gespeichert werden (z.B. für Messungen im E-Gebäude), kann das `gps` Argument beim Erstellen eines Samples einfach weggelassen werden:
+Sollen Samples ohne GPS-Informationen gespeichert werden (z.B. für Messungen im E-Gebäude) kann dies beim erstellen eines Subsets bekanntgegeben werden:
+```
+from data_backend import Dataset
+import numpy as np
+
+# Neues Dataset für Messung im E-Gebäude:
+dataset = Dataset("./", "hs_e_building")
+
+# Neues Subset ohne GPS Informationen:
+dataset.create_subset("minhold", freq_bins=[1e3, 1e4, 1e5], gps_support=False)
+
+# Das Speichern eines Sampes ohne GPS Informationen erfolgt analog zu den vorherigen Beispielen.
+# Es müssen ausschließlich die GPS-Felder weggelassen werden:
+dataset["minhold"].append_sample(
+        time     = np.datetime64( "now" ),
+        spectrum = [-87.3, -91.3, -89.2]
+    )
+```
+
+
+#### Ein Sample mit reduzierten GPS-Informationen speichern
+Eventuell stellt der GPS-Receiver nicht alle zusätzlichen Informationen (wie z.B. speed, accuracy etc.) zur Verfügung. Diese können dann beim Abspeichern eines Samples einfach weggelassen werden. Außschließlich die Felder "lat" und "lon" müssen (bei eingeschaltetem gps_support) zwangsläufig vorhanden sein.
 
 ```
-# Erstellen eines Samples ohne GPS:
-sample1 = Sample(
-    time     = np.datetime64( "now" ), 
-    spectrum = Spectrum( freq=[1e6, 2e6, 3e6], mag=[-87.9, -82.6, -93.4] )
-)
+# Importieren
+from data_backend import Dataset
+import numpy as np
 
-# Schreiben ins Dataset:
-dataset.samples.append(sample1)
+dataset = Dataset("./", "blockland")
+dataset.create_subset("quasipeak", freq_bins=[1e3, 1e4, 1e5], gps_support=True)
+
+dataset["quasipeak"].append_sample(
+        time     = np.datetime64( "now" ),
+        spectrum = [-87.3, -91.3, -89.2],
+        lat      = 53.073635,
+        lon      = 8.806422,
+        alt      = 12
+    )
+
+dataset.close()
 ```
