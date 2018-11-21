@@ -25,7 +25,6 @@ class Dataset:
         # Initialize Samples subclass
         self.__samples = Dataset.Samples(self.__file)
 
-
     class Device:
         def __init__(self, file):
             self.__file = file
@@ -72,6 +71,33 @@ class Dataset:
             if not isinstance(sample, Sample):
                 raise Exception("Can only append instances of type 'Sample' to dataset")
 
+    class Subset:
+        def __init__(self, hd5_dataset):
+            self.__hd5_dataset = hd5_dataset
+
+    def create_subset(self, name, freq_bins, gps_support):
+        if name in self.__file:
+            raise Exception("Subset %s already exists" % name)
+        if gps_support:
+            dtype = np.dtype([("time", np.uint64),
+                          ("gps_lat", np.float64),
+                          ("gps_lon", np.float64),
+                          ("gps_alt", np.float64),
+                          ("gps_speed", np.float64),
+                          ("gps_sats", np.uint8),
+                          ("gps_accuracy", np.float32),
+                          ("spectrum", np.float64, len(device_info["frequency_bins"]))])
+        else:
+            dtype = np.dtype([("time", np.uint64),
+                      ("spectrum", np.float64, freq_bins)])
+
+        self.__file.create_dataset(name, (0,), dtype=dtype)
+
+    def __len__(self):
+        return len(self.__file)
+
+    def __getitem__(self, index):
+        return Dataset.Subset(self.__file[index])
 
     @property
     def name(self):
@@ -95,11 +121,6 @@ if __name__ == '__main__':
     from gps import GPS
 
     dataset = Dataset("./", "Neustadt")
-
-    sample = Sample(
-        time     = np.datetime64("now"),
-        spectrum = Spectrum([],[]),
-        gps      = GPS(8.3, 2.5)
-    )
+    print(dataset["minhold"])
 
     dataset.close()
