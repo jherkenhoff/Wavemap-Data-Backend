@@ -77,14 +77,14 @@ import numpy as np
 
 # Erstellen eines neuen Datasets:
 # Das erste Argument (hier "./") gibt den Pfad an, wo das Dataset gespeichert werden soll.
-# Das zweite argument (hier "neustadt") gibt den Namen des Datasets an.
+# Das zweite Argument (hier "neustadt") gibt den Namen des Datasets an.
 dataset = Dataset("./", "neustadt")
 
 # Für die spätere Zuordnung des Datasets sollten die Device Metadaten geschrieben werden:
 dataset.device.name = "Raspberry Pi"
 dataset.device.version = "1.8"
 
-# Ein Dataset kann mehrere Subsets beinhalten. Das ist zum Beispiel dass sinnvoll, wenn die selbe Messung
+# Ein Dataset kann mehrere Subsets beinhalten. Das ist zum Beispiel dann sinnvoll, wenn die selbe Messung
 # Daten in mehreren Varianten abspeichern möchte (z.B. jeweils einmal mit "minhold", "maxhold" und "quasipeak").
 # Das erste Argument (hier "maxhold") gibt den Namen des Subsets an. Er kann frei gewählt werden.
 # Das zweite Argument (`freq_bins`) gibt die Frequenzen an, bei denen Spektraldaten gemessen werden. (Hier z.B. bei 1kHz, 10kHz und 100kHz)
