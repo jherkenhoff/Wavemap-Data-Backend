@@ -32,12 +32,12 @@ class Subset(Dataset):
             raise Exception("Subset %s already exists" % name)
         if gps_support:
             dtype = np.dtype([("time", np.uint64),
-                              ("gps_lat", np.float64),
-                              ("gps_lon", np.float64),
-                              ("gps_alt", np.float64),
-                              ("gps_speed", np.float64),
-                              ("gps_sats", np.uint8),
-                              ("gps_accuracy", np.float32),
+                              ("lat", np.float64),
+                              ("lon", np.float64),
+                              ("alt", np.float32),
+                              ("speed", np.float32),
+                              ("sats", np.uint8),
+                              ("accuracy", np.float32),
                               ("spectrum", np.float64, len(freq_bins))])
         else:
             dtype = np.dtype([("time", np.uint64),

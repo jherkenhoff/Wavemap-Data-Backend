@@ -54,9 +54,8 @@ class Dataset(File):
 
 
 if __name__ == '__main__':
-
-    dataset = Dataset("./", "neustadt")
-    dataset.create_subset("maxhold", freq_bins=[1e3, 1e4, 1e5], gps_support=True)
+    dataset = Dataset("./", "neusstadt")
+    #dataset.create_subset("maxhold", freq_bins=[1e3, 1e4, 1e5], gps_support=True)
     dataset["maxhold"].append_sample(
         time     = 9,
         spectrum = [-87.3, -91.3, -89.2],
@@ -67,6 +66,6 @@ if __name__ == '__main__':
         sats     = 8,
         accuracy = 6
     )
-    print(dataset["maxhold"][:])
+    print(dataset["maxhold"][0:2]["spectrum"].mean(1))
 
     dataset.close()
