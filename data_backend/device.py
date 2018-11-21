@@ -18,4 +18,36 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-from .dataset import Dataset
+from h5py import AttributeManager
+
+class Device(AttributeManager):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    @property
+    def name(self):
+        if "device_name" in self:
+            return self["device_name"]
+        else:
+            return None
+
+    @name.setter
+    def name(self, name):
+        if isinstance(name, str):
+            self["device_name"] = name
+        else:
+            raise Exception("Device name must be a string")
+
+    @property
+    def version(self):
+        if "device_version" in self:
+            return self.__file.attrs["device_version"]
+        else:
+            return None
+
+    @version.setter
+    def version(self, version):
+        if isinstance(version, str):
+            self["device_version"] = version
+        else:
+            raise Exception("Device version must be a string")
