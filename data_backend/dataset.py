@@ -22,8 +22,8 @@ import os.path
 from h5py import File
 
 # Local modules
-from device import Device
-from subset import Subset
+from .device import Device
+from .subset import Subset
 
 class Dataset(File):
 
