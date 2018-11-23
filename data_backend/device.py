@@ -41,7 +41,7 @@ class Device(AttributeManager):
     @property
     def version(self):
         if "device_version" in self:
-            return self.__file.attrs["device_version"]
+            return self["device_version"]
         else:
             return None
 
