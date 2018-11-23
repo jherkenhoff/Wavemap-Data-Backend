@@ -55,6 +55,9 @@ class Subset(Dataset):
         if not len(self.freq_bins) == len(spectrum):
             raise Exception("Length of spectrum does not match the specified frequency bins. Expected length: %d, but got: %d" %(len(self.freq_bins), len(spectrum)))
 
+        time = np.datetime64(time)
+        time = np.uint64(time)
+
         self.resize( (self.len() + 1,) )
         if self.supports_gps:
             self[-1] = (time, lat, lon, alt, speed, sats, accuracy, spectrum)
