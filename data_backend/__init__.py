@@ -19,5 +19,3 @@
 # IN THE SOFTWARE.
 
 from .dataset import Dataset
-from .device import Device
-from .subset import Subset
