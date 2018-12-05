@@ -20,6 +20,7 @@
 
 import os.path
 from h5py import File
+import numpy as np
 
 # Local modules
 from .device import Device
@@ -34,9 +35,9 @@ class Dataset(File):
         path = os.path.join(directory, name + Dataset.FILE_EXTENSION)
         super().__init__(path, "a")
 
-    def create_subset(self, name, freq_bins, gps_support, reduced_precision=False):
+    def create_subset(self, name, freq_bins, gps_support, dtype=np.float64, compression=None):
         # Subset creation is encapsulated in a static method in "Subset" class
-        Subset.create(self, name, freq_bins, gps_support, reduced_precision)
+        Subset.create(self, name, freq_bins, gps_support, dtype, compression)
 
     def __getitem__(self, index):
         if index in self:

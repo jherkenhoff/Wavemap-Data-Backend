@@ -2,13 +2,13 @@ import sys
 import os
 import time
 import tracemalloc
-sys.path.append("../data_backend")
+sys.path.append("../")
 
 from data_backend.dataset import Dataset
 import numpy as np
 
-NUM_FREQ_BINS = 10000
-NUM_SAMPLES = 1
+NUM_FREQ_BINS = 100000
+NUM_SAMPLES = 10000
 
 ###################################
 # SETUP
@@ -21,7 +21,7 @@ dataset.device.version = "1.0"
 freq_bins = np.logspace(3, 9, NUM_FREQ_BINS)
 
 if not "test" in dataset:
-    dataset.create_subset("test", freq_bins, False)
+    dataset.create_subset("test", freq_bins, False, dtype=np.float32)
 
 ###################################
 # WRITE
@@ -48,7 +48,7 @@ tracemalloc.stop()
 print("Start reading all samples (%d) and summing up the spectrum" % dataset["test"].len())
 tracemalloc.start()
 start_time = time.perf_counter()
-sum = dataset["test"][:]["spectrum"].mean(1)
+sum = dataset["test"].spectrum[:].mean(1)
 stop_time = time.perf_counter()
 (current, peak) = tracemalloc.get_traced_memory()
 print("Peak memory consumption: %.3f MiB" %(peak/1048576))
@@ -66,7 +66,7 @@ start_time = time.perf_counter()
 
 chunk_size = 1000
 for i in range(int(dataset["test"].len()/chunk_size)):
-    sum = dataset["test"][i*chunk_size:i*chunk_size+chunk_size]["spectrum"].mean(1)
+    sum = dataset["test"].spectrum[i*chunk_size:i*chunk_size+chunk_size].mean(1)
 
 stop_time = time.perf_counter()
 (current, peak) = tracemalloc.get_traced_memory()

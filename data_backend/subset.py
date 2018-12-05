@@ -18,41 +18,42 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-from h5py import Dataset
+from h5py import Group
 import numpy as np
 
-class Subset(Dataset):
-
-    MIN_MAGNITUDE = -150
-    MAX_MAGNITUDE = 0
+class Subset(Group):
 
     def __init__(self, identifier):
         super().__init__(identifier)
 
     @staticmethod
-    def create(parent, name, freq_bins, gps_support, reduced_precision=False):
+    def create(parent, name, freq_bins, gps_support, dtype=np.float64, compression=None):
         if name in parent:
             raise Exception("Subset %s already exists" % name)
 
+        if not dtype in [np.uint8, np.uint16, np.float32, np.float64]:
+            raise Exception("The class 'Subset' does not support the specified dtype: %s" %dtype)
 
-        spectrum_dtype = np.uint16 if reduced_precision else np.float64
+        # Create group for subset
+        group = parent.create_group(name)
+
+        # Write subset-metadata
+        group.attrs["gps_support"] = gps_support
+
         if gps_support:
-            dtype = np.dtype([("time", np.uint64),
+            meta_dtype = np.dtype([("time", np.uint64),
                               ("lat", np.float64),
                               ("lon", np.float64),
                               ("alt", np.float32),
                               ("speed", np.float32),
                               ("sats", np.uint8),
-                              ("accuracy", np.float32),
-                              ("spectrum", spectrum_dtype, len(freq_bins))])
+                              ("accuracy", np.float32)])
         else:
-            dtype = np.dtype([("time", np.uint64),
-                              ("spectrum", spectrum_dtype, len(freq_bins))])
+            meta_dtype = np.dtype([("time", np.uint64)])
 
-        dset = parent.create_dataset(name, (0,), dtype=dtype, maxshape=(None,), chunks=(16,))
-        dset.attrs["gps_support"] = gps_support
-        dset.attrs["freq_bins"] = freq_bins
-        dset.attrs["reduced_precision"] = reduced_precision
+        group.create_dataset("freq_bins", data=freq_bins)
+        group.create_dataset("meta", (0,), dtype=meta_dtype, maxshape=(None,), chunks=(16,))
+        group.create_dataset("spectrum", (0,freq_bins.size), dtype=dtype, compression=compression, maxshape=(None,freq_bins.size), chunks=(32,freq_bins.size))
 
     # Store sample
     def append_sample(self, time, spectrum, lat=None, lon=None, alt=None, speed=None, sats=None, accuracy=None):
@@ -65,18 +66,29 @@ class Subset(Dataset):
         time = np.datetime64(time)
         time = np.uint64(time)
 
-        if self.is_reduced_precision:
-            spectrum = []
-
-        self.resize( (self.len() + 1,) )
+        self.meta.resize( (self.meta.len() + 1,) )
         if self.supports_gps:
-            self[-1] = (time, lat, lon, alt, speed, sats, accuracy, spectrum)
+            self.meta[-1] = (time, lat, lon, alt, speed, sats, accuracy)
         else:
-            self[-1] = (time, spectrum)
+            self.meta[-1] = (time)
+
+        # Write spectrum data
+        self.spectrum.resize( (self.spectrum.len() + 1,len(spectrum)) )
+        self.spectrum[-1] = spectrum
+
+    def __getitem__(self, index):
+        if index in self:
+            return Subset(super().__getitem__(index).id)
+        else:
+            raise Exception("Subset '%s' does not exist" %index)
 
     @property
-    def samples(self):
-        return Dataset.Subset.Samples(self.__hd5_dataset)
+    def meta(self):
+        return super().__getitem__("meta")
+
+    @property
+    def spectrum(self):
+        return super().__getitem__("spectrum")
 
     @property
     def supports_gps(self):
@@ -84,8 +96,7 @@ class Subset(Dataset):
 
     @property
     def freq_bins(self):
-        return self.attrs["freq_bins"]
+        return super().__getitem__("freq_bins")
 
-    @property
-    def is_reduced_precision(self):
-        return self.attrs["reduced_precision"]
+    def len(self):
+        return self.meta.len()
