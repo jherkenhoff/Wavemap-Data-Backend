@@ -23,13 +23,19 @@ import numpy as np
 
 class Subset(Dataset):
 
+    MIN_MAGNITUDE = -150
+    MAX_MAGNITUDE = 0
+
     def __init__(self, identifier):
         super().__init__(identifier)
 
     @staticmethod
-    def create(parent, name, freq_bins, gps_support):
+    def create(parent, name, freq_bins, gps_support, reduced_precision=False):
         if name in parent:
             raise Exception("Subset %s already exists" % name)
+
+
+        spectrum_dtype = np.uint16 if reduced_precision else np.float64
         if gps_support:
             dtype = np.dtype([("time", np.uint64),
                               ("lat", np.float64),
@@ -38,14 +44,15 @@ class Subset(Dataset):
                               ("speed", np.float32),
                               ("sats", np.uint8),
                               ("accuracy", np.float32),
-                              ("spectrum", np.float64, len(freq_bins))])
+                              ("spectrum", spectrum_dtype, len(freq_bins))])
         else:
             dtype = np.dtype([("time", np.uint64),
-                              ("spectrum", np.float64, len(freq_bins))])
+                              ("spectrum", spectrum_dtype, len(freq_bins))])
 
         dset = parent.create_dataset(name, (0,), dtype=dtype, maxshape=(None,), chunks=(16,))
         dset.attrs["gps_support"] = gps_support
         dset.attrs["freq_bins"] = freq_bins
+        dset.attrs["reduced_precision"] = reduced_precision
 
     # Store sample
     def append_sample(self, time, spectrum, lat=None, lon=None, alt=None, speed=None, sats=None, accuracy=None):
@@ -57,6 +64,9 @@ class Subset(Dataset):
 
         time = np.datetime64(time)
         time = np.uint64(time)
+
+        if self.is_reduced_precision:
+            spectrum = []
 
         self.resize( (self.len() + 1,) )
         if self.supports_gps:
@@ -75,3 +85,7 @@ class Subset(Dataset):
     @property
     def freq_bins(self):
         return self.attrs["freq_bins"]
+
+    @property
+    def is_reduced_precision(self):
+        return self.attrs["reduced_precision"]

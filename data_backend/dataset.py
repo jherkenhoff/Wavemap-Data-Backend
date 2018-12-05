@@ -34,9 +34,9 @@ class Dataset(File):
         path = os.path.join(directory, name + Dataset.FILE_EXTENSION)
         super().__init__(path, "a")
 
-    def create_subset(self, name, freq_bins, gps_support):
+    def create_subset(self, name, freq_bins, gps_support, reduced_precision=False):
         # Subset creation is encapsulated in a static method in "Subset" class
-        Subset.create(self, name, freq_bins, gps_support)
+        Subset.create(self, name, freq_bins, gps_support, reduced_precision)
 
     def __getitem__(self, index):
         if index in self:

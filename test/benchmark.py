@@ -4,11 +4,11 @@ import time
 import tracemalloc
 sys.path.append("../data_backend")
 
-from dataset import Dataset
+from data_backend.dataset import Dataset
 import numpy as np
 
-NUM_FREQ_BINS = 5000
-NUM_SAMPLES = 10000
+NUM_FREQ_BINS = 10000
+NUM_SAMPLES = 1
 
 ###################################
 # SETUP
@@ -31,7 +31,7 @@ tracemalloc.start()
 start_time = time.perf_counter()
 for i in range(NUM_SAMPLES):
     dataset["test"].append_sample(
-        time     = 8,
+        time     = np.datetime64("now"),
         spectrum = np.random.randn(NUM_FREQ_BINS)
     )
 stop_time = time.perf_counter()
