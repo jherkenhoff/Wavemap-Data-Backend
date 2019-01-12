@@ -136,7 +136,7 @@ sample = dataset["maxhold"][-5:] # Die letzen 5 Samples
 
 # Um auf einzelne Elemente innerhalb der Samples zuzugreifen wird der Indexing Operator benutzt:
 sample = dataset["maxhold"][0]["time"]          # Zeit des ersten Samples
-sample = dataset["maxhold"][:][["lat", "lon"]]  # Latitude und longitude Elemente aller Samples 
+sample = dataset["maxhold"][:][["lat", "lon"]]  # Latitude und longitude Elemente aller Samples
 
 # Auf diese Weise können bereits einfache Verarbeitungsroutinen generiert werden:
 spectrum_mean = dataset["maxhold"][0:2]["spectrum"].mean(1)
@@ -188,3 +188,19 @@ dataset["quasipeak"].append_sample(
 
 dataset.close()
 ```
+
+## Benchmark
+
+Über das Python Skript `test/benchmark.py` kann ein Benchmark des Data-Backends ausgeführt werden.
+
+------ 100.000 freq bins, 10.000 Samples, dtype=uint8, compression=None
+1.0 GB
+Write: 57.45 s   1.0 MiB
+Read: 1.1 s 953.9 MiB
+Read Chunked: 1.1 s 95.5 MiB
+
+------ 100.000 freq bins, 10.000 Samples, dtype=float32, compression=None
+4.0 GB
+Write: 68.1 s   1.0 MiB
+Read: 1.8 s 3814.9 MiB
+Read Chunked: 1.9 s 381.5 MiB
